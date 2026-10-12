@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "themis-ti-mosaic-tools: download, verify and repair the THEMIS-derived global thermal inertia mosaic of Mars"
+version: 0.1.0
+date-released: 2026-10-12
+license: MIT
+repository-code: "https://github.com/euchas/themis-ti-mosaic-tools"
+url: "https://github.com/euchas/themis-ti-mosaic-tools"
+authors:
+  - family-names: Valantinas
+    given-names: Adomas
+    orcid: "https://orcid.org/0000-0001-9995-3335"
+    affiliation: "University of Cambridge"
+keywords:
+  - Mars
+  - THEMIS
+  - Mars Odyssey
+  - thermal inertia
+  - GeoTIFF
+  - ISIS
+  - USGS Astrogeology
+abstract: >-
+  Python tools for the USGS/ASU Mars THEMIS-derived global thermal inertia
+  mosaic: a resumable, size-verified downloader for the 24 quantitative
+  GeoTIFF tiles, a three-way integrity check (TIFF tile index, full decode,
+  value envelope) that catches corrupt tiles a byte-size check cannot, and a
+  repair step that rebuilds a tile from its intact ISIS cube master.
