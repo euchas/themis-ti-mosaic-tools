@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+.env
+*.env
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Mosaic tiles, cubes, backups, listings and run outputs (never committed)
+/data/
+/outputs/
+/tiles/
+*.tif
+*.tiff
+*.cub
+*.bak
+*.aux.xml
+*.log
+verify_results.json
+s3_listing.xml
