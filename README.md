@@ -15,7 +15,7 @@ The tools exist because seven of the 24 published GeoTIFF tiles were found
 to be corrupt in 2026 although their byte sizes match the archive listing
 (see [The corrupt tiles](#the-corrupt-tiles)). The finding has been reported
 to the USGS Astrogeology Science Center; until the files are regenerated,
-`verify` tells you which tiles not to trust and `repair` rebuilds them.
+`verify` shows which tiles not to trust and `repair` rebuilds them.
 
 ## Install
 
@@ -41,8 +41,7 @@ themis-ti-tools manifest --kind cub -o cubes.tsv   # fresh listing of the ISIS m
 ```
 
 The same functions are available from Python (`download_manifest`,
-`verify_tile`, `repair_tile`, ...). `verify` exits with status 1 when any
-file is not clean, `download` and `repair` when any tile failed.
+`verify_tile`, `repair_tile`, ...). Exit status 1 means a tile failed.
 
 ## Data source
 
@@ -50,21 +49,17 @@ file is not clean, `download` and `repair` when any tile failed.
   (USGS Astrogeology Science Center with Arizona State University; method of
   Fergason et al. 2006).
 * Bucket `https://asc-astropedia.s3.us-west-2.amazonaws.com/`, prefix
-  `Mars/Odyssey/THEMIS-Global-Thermal-Inertia-Mosaic/`, anonymous HTTPS.
-  `Quantitative-32-Bit/` holds the 24 ISIS `.cub` masters and
-  `Quantitative-32-Bit/ancillary/` the GeoTIFF and PNG versions; the
-  `Qualitative-8-Bit/` product (normalised for display) has the same layout.
-* Tiles of 30 degrees latitude by 60 degrees longitude between 60S and 60N,
-  named by their south-west corner (rows `00N 30N 30S 60S`, columns `000E` to
-  `300E`): `THEMIS_TI_Mosaic_Quant_<tile>_100mpp.tif`, float32 apparent
-  thermal inertia in J m-2 K-1 s-1/2, Mars equirectangular projection on a
-  sphere of radius 3,396,190 m, about 35,565 x 17,783 pixels, NoData
+  `Mars/Odyssey/THEMIS-Global-Thermal-Inertia-Mosaic/`, anonymous HTTPS:
+  `Quantitative-32-Bit/` holds the 24 ISIS `.cub` masters and its
+  `ancillary/` the GeoTIFF and PNG versions; `Qualitative-8-Bit/` (a display
+  product) is laid out the same way.
+* Tiles of 30 x 60 degrees between 60S and 60N, named by their south-west
+  corner (`00N000E` ... `60S300E`): `THEMIS_TI_Mosaic_Quant_<tile>_100mpp.tif`,
+  float32 apparent thermal inertia in J m-2 K-1 s-1/2, Mars equirectangular
+  projection (sphere radius 3,396,190 m), about 35,565 x 17,783 pixels, NoData
   -3.4028226550889045e+38, LZW, 256 x 256 internal tiles, values within
-  [20.0, 3015.906].
-
-The bundled manifest carries the sizes the bucket reported in June 2026; run
-`themis-ti-tools manifest` for a fresh listing if any tile has been
-regenerated since.
+  [20.0, 3015.906]. The bundled manifest carries the sizes the bucket reported
+  in June 2026; `themis-ti-tools manifest` fetches a fresh listing.
 
 ## The three-way check
 
@@ -81,8 +76,8 @@ download, not a valid file. `verify` runs three independent checks per file:
    outside [19.99, 3016.0], NoData excluded. Catches silent corruption.
 
 `--pillow` adds a decode with Pillow's own libtiff build, independent of
-GDAL. A file is `CLEAN` only when every check passes. Memory use is one strip
-in float64 per worker, about 0.6 GB for a full-width tile.
+GDAL. A file is `CLEAN` only when every check passes; each worker holds one
+strip in float64, about 0.6 GB for a full-width tile.
 
 ## The corrupt tiles
 
@@ -105,26 +100,24 @@ The two truncated tiles are caught by the structural check, the other five
 only by decoding; the remaining 17 tiles pass everything.
 
 `repair` downloads the tile's `.cub` (resumable, size checked against the
-bucket), masks non-finite pixels and ISIS special pixels (|value| > 1e4:
-GDAL's ISIS3 driver only maps NULL, so the other special values of about
-+/-3.4e38 would otherwise leak into the GeoTIFF), clamps the rest to
-[20.0, 3015.906], writes a float32 LZW-compressed 256 x 256 tiled GeoTIFF with
-the master's georeferencing and the product's NoData value, decode-checks it,
-moves the corrupt file to `<tile>.CORRUPT.tif.bak` and installs the rebuilt
-one. A tile with an existing `.bak` is skipped, so the command can be re-run.
-Rebuilt tiles are not byte-identical to USGS output but hold the same values
-on the same grid.
+bucket), masks non-finite and ISIS special pixels (|value| > 1e4; GDAL's
+ISIS3 driver only maps NULL, so the other special values of about +/-3.4e38
+would otherwise leak through), clamps the rest to [20.0, 3015.906], writes a
+float32 LZW 256 x 256 tiled GeoTIFF with the master's georeferencing and the
+product's NoData, decode-checks it, moves the corrupt file to
+`<tile>.CORRUPT.tif.bak` and installs the rebuilt one; a tile with a `.bak`
+is skipped on re-runs. Rebuilt tiles hold the same values on the same grid
+but are not byte-identical to USGS output.
 
 ## Known limitations
 
 * The value envelope and the special-pixel threshold were read off the clean
-  published tiles (a spike at exactly 20.0 and at 3015.906), not taken from
-  product documentation, so `verify` is meaningful for the quantitative
-  product only.
+  published tiles (spikes at exactly 20.0 and 3015.906), not taken from
+  product documentation; `verify` is meaningful for the quantitative product only.
 * `download` verifies byte sizes only (the bucket's ETags are multipart
   hashes, not file checksums); run `verify` afterwards.
-* The listing and HEAD requests are anonymous and rely on the bucket staying
-  public. The client identifies itself as
+* Listing and HEAD requests are anonymous and rely on the bucket staying
+  public; the client sends the User-Agent
   `themis-ti-mosaic-tools/0.1.0 (+https://github.com/euchas/themis-ti-mosaic-tools)`.
 
 ## Citing
